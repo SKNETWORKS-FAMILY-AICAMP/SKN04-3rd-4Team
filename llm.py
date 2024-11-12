@@ -1,4 +1,3 @@
-from src.utils import show_stream
 
 from dotenv import load_dotenv
 from sklearn.metrics.pairwise import cosine_similarity
@@ -100,7 +99,7 @@ import faiss
 from langchain_community.vectorstores import FAISS
 from langchain_community.docstore.in_memory import InMemoryDocstore
 from langchain_chroma import Chroma
-
+from utils import reorder_documents
 from langchain_teddynote.document_compressors import LLMChainExtractor
 from langchain.retrievers.document_compressors import EmbeddingsFilter
 from langchain.retrievers import (
@@ -116,19 +115,19 @@ from langchain.retrievers.multi_vector import MultiVectorRetriever
 from langchain.chains.query_constructor.base import AttributeInfo
 from langchain.retrievers.self_query.base import SelfQueryRetriever
 import numpy as np
-
+import db
 
 
 load_dotenv()
 set_llm_cache(InMemoryCache())
 
 # BM25Retriever를 사용하여 문서에서 검색을 수행하는 리트리버 생성
-retriever_b25 = BM25Retriever.from_documents(documents)
+retriever_b25 = BM25Retriever.from_documents(db.documents)
 retriever_b25.k = 1  # 반환할 결과의 개수를 1로 설정
 
 # Chroma를 사용하여 문서로부터 임베딩 데이터베이스 생성
 db_chroma = Chroma.from_documents(
-    documents,  # 사용될 문서
+    db.documents,  # 사용될 문서
     embedding=OpenAIEmbeddings(model='text-embedding-3-small'),  # 사용할 임베딩 모델 지정
 )
 
@@ -148,28 +147,29 @@ ensemble_retriever = EnsembleRetriever(
     )
 )
 
-def reorder_documents(documents):
-    # LongContextReorder 객체 생성: 긴 문맥을 재정렬하는 기능
-    context_reorder = LongContextReorder()
-    
-    # 입력된 문서들을 재정렬
-    documents_reordered = context_reorder.transform_documents(documents)
-    
-    # 재정렬된 문서의 내용을 줄바꿈으로 구분하여 하나의 문자열로 결합
-    documents_joined = '\n'.join([document.page_content for document in documents_reordered])
 
-    return documents_joined  # 재정렬된 문서의 내용을 반환
 
 # 프롬프트 템플릿 정의: reference, question, language를 포함
 template = '''
-주어진 reference를 최대한 활용하되 reference내에서 찾을 수 없으면 모른다고 하라, 그리고 reference를 같이 적어줘:
+너는 신입사원을 대상으로 기업에 알려주는 봇이다.
+회사 내부 규정과 정책에 대한 정보를 바탕으로 아래의 질문에 상세히 답하라. 
+답변한 내용 마지막에는 참고 서식으로 reference 내용도 추가해서 답변하여라 
+#### 제공된 정보(Reference)
 {reference}
 
-다음 질문에 답하라:
+#### 질문:
 {question}
 
-주어지는 언어로 답하라: 
-{language}
+#### 주의사항:
+질문에 대해 정확하고 구체적인 답변을 제공해야 한다.
+회사 내부 규정에 대한 답변은 공식적인 언어를 사용하라.
+답변은 주어진 언어로 작성하라: {language}
+회사 내부 문서에 없는 내용을 질문할 경우 "해당 내용은 관련 부서에 문의하시기바랍니다."로 출력하라
+
+#### 예시 질문:
+"연차 휴가는 어떻게 신청하나요?"
+"급여 지급일은 언제인가요?"
+"퇴사 절차에 대해 설명해 주세요."
 '''
 
 # 템플릿으로부터 프롬프트 생성
