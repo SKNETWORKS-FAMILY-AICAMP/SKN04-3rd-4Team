@@ -1,13 +1,59 @@
+import os
+import re
+
+from langchain.schema import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_transformers import LongContextReorder
+from langchain_community.document_loaders import UnstructuredWordDocumentLoader
+
 
 def reorder_documents(documents):
-    # LongContextReorder 객체 생성: 긴 문맥을 재정렬하는 기능
     context_reorder = LongContextReorder()
     
-    # 입력된 문서들을 재정렬
     documents_reordered = context_reorder.transform_documents(documents)
     
-    # 재정렬된 문서의 내용을 줄바꿈으로 구분하여 하나의 문자열로 결합
     documents_joined = '\n'.join([document.page_content for document in documents_reordered])
 
-    return documents_joined  # 재정렬된 문서의 내용을 반환
+    return documents_joined
+
+
+def modify_file_name(file_name: str):
+    modified_name = re.sub(r"\(.*?\)", "", file_name)
+    return modified_name.strip()
+
+def load_documents_from_folder(folder_path: str):
+    documents = []
+    docx_files = [f for f in os.listdir(folder_path) if f.endswith('.docx')]
+    for file_name in docx_files:
+        file_path = os.path.join(folder_path, file_name)
+        loader = UnstructuredWordDocumentLoader(file_path)
+        try:
+            modified_file_name = modify_file_name(os.path.splitext(file_name)[0])
+            document = loader.load()
+            for doc in document:
+                if "source" in doc.metadata:
+                    del doc.metadata["source"]
+                doc.metadata["file_name"] = modified_file_name
+                documents.append(doc)
+        except Exception as e:  
+            print(f"Error occurred while loading {file_name}: {e}")
+
+    return documents
+
+def split_documents(documents: list, chunk_size=500, chunk_overlap=50):
+
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap
+    )
+    
+    splitted_documents = []
+    for document in documents:
+        splitted_texts = text_splitter.split_text(document.page_content)
+        
+        splitted_documents.extend(
+            Document(page_content=text, metadata=document.metadata)
+            for text in splitted_texts
+        )
+    
+    return splitted_documents

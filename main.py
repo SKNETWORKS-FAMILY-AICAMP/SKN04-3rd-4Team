@@ -4,20 +4,14 @@ import time
 import llm
 from PIL import Image
 
-# Page Configuration
 st.set_page_config(page_title="Welcome BR", page_icon="🚅", layout="centered")
 
 image = Image.open('./logo_all.png')
 st.image(image, width = 400)
-# Title and Introduction
-# st.title("🤖 질문-답변 시스템")
-# st.write("여러분의 질문에 대해 답변을 얻어보세요! 질문을 입력하고 '답변 찾기' 버튼을 눌러주세요.")
 
-# st.title("🤖Welcome on board")
 st.title("🤖Welcome on board")
 st.write("사수에게 물어보기 애매한 사항들을 질문해주세요.")
 
-# Custom styling (CSS for better UI)
 st.markdown("""
     <style>
         .stTextInput>div>div>input {
@@ -57,22 +51,18 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-
-# Input field for question
 question = st.text_input("질문을 입력하세요:", max_chars=100)
 
-# Button for finding answer
 if st.button("🔍 답변 찾기", key="find_answer"):
-    if question:  # Check if the question is entered
+    if question:
         with st.spinner("답변을 찾는 중입니다..."):
             try:
-                # Use the LLM chain to generate the response
+                
                 response = llm.chain.invoke({
                     'question': question,
-                    'language': '한국어'  # Desired response language
+                    'language': '한국어'
                 })
 
-                # Display the answer
                 st.markdown("#### 📝 답변")
                 st.markdown(response)
 

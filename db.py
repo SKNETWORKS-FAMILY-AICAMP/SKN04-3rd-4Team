@@ -9,21 +9,15 @@ from langchain_text_splitters import (
 )
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_chroma import Chroma
+from utils import load_documents_from_folder, split_documents
 
 folder_path = './data/신입사원'
-documents = []
-
-# 폴더 내 모든 .docx 파일을 로드
-for filename in os.listdir(folder_path)[:2]:
-    if filename.endswith('.docx'):
-        file_path = os.path.join(folder_path, filename)
-        loader = UnstructuredWordDocumentLoader(file_path)
-        documents.extend(loader.load())
+documents = load_documents_from_folder(folder_path)
+splitted_documents = split_documents(documents)
 
 chroma_db = Chroma.from_documents(
-    documents,
+    splitted_documents,
     embedding = OpenAIEmbeddings(model='text-embedding-3-small'),
     collection_name="example_collection",
     persist_directory='./save'
 )
-
