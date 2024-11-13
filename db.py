@@ -1,11 +1,4 @@
 import os
-from langchain_community.document_loaders import (
-    Docx2txtLoader,
-    UnstructuredWordDocumentLoader,
-)
-from langchain_text_splitters import (
-    RecursiveCharacterTextSplitter,
-)
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_chroma import Chroma
 from langchain.retrievers import BM25Retriever
