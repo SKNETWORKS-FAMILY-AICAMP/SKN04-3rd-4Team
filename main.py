@@ -2,12 +2,11 @@ import streamlit as st
 import openai
 import time
 import llm
-from PIL import Image
 
 st.set_page_config(page_title="Welcome BR", page_icon="🚅", layout="centered")
 
-image = Image.open('https://github.com/user-attachments/assets/44e55662-1d8e-4159-8834-72b135461411')
-st.image(image, width = 400)
+image_url = 'https://github.com/user-attachments/assets/44e55662-1d8e-4159-8834-72b135461411'
+st.image(image_url, width = 400)
 
 st.title("🤖Welcome on board")
 st.write("사수에게 물어보기 애매한 사항들을 질문해주세요.")
