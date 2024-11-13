@@ -10,6 +10,9 @@ from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_chroma import Chroma
 import numpy as np
 import template_llm
+import joblib
+from langchain.retrievers import EnsembleRetriever
+
 
 load_dotenv()
 db_chroma = Chroma(
@@ -18,8 +21,14 @@ db_chroma = Chroma(
     persist_directory= './save'
 )
 
+bm_retriever = joblib.load('./save/bm25_retriever_model.pkl')
+
 retriever_chroma = db_chroma.as_retriever(search_kwargs={'k': 1})
 
+ensemble_retriever = EnsembleRetriever(
+        retrievers=[bm_retriever, retriever_chroma],
+        weights=[0.5, 0.5]
+    )
 template = template_llm.template
 
 prompt = PromptTemplate.from_template(template)
@@ -31,7 +40,7 @@ parser = StrOutputParser()
 chain = (
     {
         'reference': itemgetter('question')
-        | retriever_chroma
+        | ensemble_retriever
         | RunnableLambda(reorder_documents),
         'question': itemgetter('question'),
         'language': itemgetter('language'),
