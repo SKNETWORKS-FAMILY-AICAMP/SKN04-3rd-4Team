@@ -11,7 +11,7 @@ from langchain_chroma import Chroma
 import numpy as np
 import template_llm
 import joblib
-from langchain.retrievers import EnsembleRetriever
+from langchain_classic.retrievers import EnsembleRetriever
 
 
 load_dotenv()

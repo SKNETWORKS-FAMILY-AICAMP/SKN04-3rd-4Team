@@ -1,7 +1,7 @@
 import os
 from langchain_openai.embeddings import OpenAIEmbeddings
 from langchain_chroma import Chroma
-from langchain.retrievers import BM25Retriever
+from langchain_community.retrievers import BM25Retriever
 from utils import load_documents_from_folder, split_documents
 import joblib
 from dotenv import load_dotenv
